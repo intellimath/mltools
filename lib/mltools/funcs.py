@@ -114,25 +114,25 @@ class SoftQuantileFunc(Func):
     def evaluate(self, X):
         Y = self.rho.evaluate(X)
         Y[X > 0] *= self.alpha
-        Y[X < 0] *= 1.0 - self.alpha
+        Y[X < 0] *= (1.0 - self.alpha)
         return Y
     #
     def derivative(self, X):
         Y = self.rho.derivative(X)
         Y[X > 0] *= self.alpha
-        Y[X < 0] *= 1.0 - self.alpha
+        Y[X < 0] *= (1.0 - self.alpha)
         return Y
     #
     def derivative2(self, X):
         Y = self.rho.derivative2(X)
         Y[X > 0] *= self.alpha
-        Y[X < 0] *= 1.0 - self.alpha
+        Y[X < 0] *= (1.0 - self.alpha)
         return Y
     #
     def derivative_div_x(self, X):
         Y = self.rho.derivative_div_x(X)
         Y[X > 0] *= self.alpha
-        Y[X < 0] *= 1.0 - self.alpha
+        Y[X < 0] *= (1.0 - self.alpha)
         return Y
     
 np_log = np.log

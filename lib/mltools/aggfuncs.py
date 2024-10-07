@@ -74,18 +74,18 @@ class MMean(AggFunc):
                 pval_min = pval
                 u_min = u
                 
-            if abs(u - u_prev) / (1 + abs(pval_min)) < self.tol:
+            if abs(pval - pval_prev) / (1 + abs(pval_min)) < self.tol:
                 break
         
         self.u = u_min
         self.pvals = pvals
         return u_min
     
-    def gradient(self, X, u0=None):
-        if u0 is None:
+    def gradient(self, X):
+        if self.u is None:
             u = self.evaluate(X)
         else:
-            u = u0
+            u = self.u
             
         R = self.rho_func.derivative2(X - u)
         R /= R.sum()
@@ -93,7 +93,7 @@ class MMean(AggFunc):
         self.u = None 
         return R    
     
-class WMMean(AggFunc):
+class CMMean(AggFunc):
     #
     def __init__(self, rho_func, n_iter=1000, tol=1.0e-8):
         self.rho_func = rho_func
@@ -108,21 +108,18 @@ class WMMean(AggFunc):
         return Y.mean()
     #
     def gradient(self, X):
-        agg = self.agg
-        
         N = len(X)
         if self.u is None:
-            u = self.u = agg.evaluate(X)
+            u = self.u = self.agg.evaluate(X)
         else:
             u = self.u
 
-        G = agg.gradient(X, u)
+        G = self.agg.gradient(X)
         
-        mask = X > u
-        m = mask.sum()
-        G *= m
+        q = (X >= u).sum()
+        G *= q
         
-        G[X <= u] += 1
+        G[X < u] += 1
         G /= N
         
         self.u = None

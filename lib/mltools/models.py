@@ -52,6 +52,9 @@ class LinearModel(Model):
     def evaluate_one(self, Xk):
         return self.param[0] + (self.param[1:] @ Xk)
     #
+    def evaluate(self, X):
+        return self.param[0] + X @ self.param[1:]
+    #
     def ievaluate(self, X):
         p0 = self.param[0]
         pp = self.param[1:]
@@ -71,16 +74,8 @@ class LinearModel(Model):
         G[:, 1:] = X
         return G
     #
-    def gradient_x(self, Xk):
-        return self.param[1:].copy()
-    #
-    def evaluate(self, X):
-        N = X.shape[0]
-        X1 = np.empty((N, self.n_param), np.double)
-        X1[:,0] = 1
-        X1[:,1:] = X
-        Y = X1 @ self.param
-        return Y
+    def gradient_x(self, X):
+        return self.param[None,1:].repeat(X.shape[0], axis=0)
 
 class SigmaNeuronModel(Model):
     #
@@ -94,14 +89,10 @@ class SigmaNeuronModel(Model):
         return self.outfunc.evaluate(self.param[0] + (self.param[1:] @ Xk))
     #
     def evaluate(self, X):
-        N = X.shape[0]
-        X1 = np.empty((N, self.n_input+1), np.double)
-        X1[:,0] = 1
-        X1[:,1:] = X
-        Y = X1 @ self.param
+        Y = self.param[0] + X @ self.param[1:]
         return self.outfunc.evaluate(Y)
     #
-    def gradient(self, Xk):
+    def gradient(self, X):
         N = X.shape[0]
         X1 = np.empty((N, self.n_input+1), np.double)
         X1[:,0] = 1
@@ -116,15 +107,12 @@ class SigmaNeuronModel(Model):
         return G
     #
     def gradient_x(self, X):
-        N = X.shape[0]
-        X1 = np.empty((N, self.n_input+1), np.double)
-        X1[:,0] = 1
-        X1[:,1:] = X
-        
-        S = X1 @ self.param
+        S = self.param[0] + X @ self.param[1:]
         D = self.outfunc.derivative(S)
-        
-        P = np.repeat(self.param[None,:], N)
+
+        N = X.shape[0]
+        P = self.param[None,1:].repeat(N, axis=0)
+
         R = P * D[:,None]
         return R
 
@@ -156,27 +144,30 @@ class SimpleNN(Model):
             mod.param = self.param[m : m+mod.n_param]
             m += mod.n_param
     #
-    def evaluate(self, Xk):
-        U = np.fromiter(
-            (mod.evaluate(Xk) for mod in self.hidden),
-            'd', self.n_hidden
-        )
+    def evaluate(self, X):
+        N = X.shape[0]
+        U = np.empty((N, self.n_hidden), np.double)
+        for j, mod in enumerate(self.hidden):
+            U[:,j] = mod.evaluate(X)
         return self.root.evaluate(U)
     #
     def gradient(self, X):
-        grad = np.empty(self.n_param, 'd')
+        N = X.shape[0]
+        Grad = np.empty((N,self.n_param), np.double)
 
-        U = np.fromiter(
-            (mod.evaluate(X) for mod in self.hidden),
-            'd', self.n_hidden
-        )
-        s = self.root.evaluate(U)
+        for j in enumerate(self.n_hidden):
+            mod = self.hidden[j]
+            U[:,j] = mod.evaluate(X)
+            
+        S = self.root.evaluate(U)
 
-        grad[:self.root.n_param] = self.root.gradient(U)
+        Grad[:,:self.root.n_param] = self.root.gradient(U)
         m = self.root.n_param
-        grad_x_root = self.root.gradient_x(U)
+        GR = self.root.gradient_x(U) # (N, m+1)
         for i,mod in enumerate(self.hidden):
-            grad[m:m+mod.n_param] = mod.gradient(X) * grad_x_root[i]
+            G = mod.gradient(X) # (N, n_param)
+            G[:,1:]
+            Grad[:,m:m+mod.n_param] = mod.gradient(X) * GR[i]
             m += mod.n_param
         return grad
 

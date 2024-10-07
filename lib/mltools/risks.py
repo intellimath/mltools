@@ -28,8 +28,6 @@ class Risk:
         G = self.model.gradient(X)
         GV = G * V[:,None]
         return GV.mean(axis=0)
-        # gradient = self.model.gradient_one
-        # return sum([vk * gradient(Xk) for vk, Xk in zip(V, X)]) / len(X)
 
 class WRisk:
     #
