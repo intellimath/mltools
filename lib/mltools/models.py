@@ -16,6 +16,12 @@ class Model:
     n_input: длина вектора входов модели
     """
     #
+    def init_param(self, param):
+        if self.param is None:
+            self.param = param
+        else:
+            self.param[:] = param
+    #
     def evaluate_one(self, Xk):
         raise NotImplemented
     #
@@ -41,13 +47,16 @@ class Model:
     def gradient(self, X):
         rows = tuple(self.igradient(X))
         return np.vstack(rows)
-
+        
 class LinearModel(Model):
     #
-    def __init__(self, n):
+    def __init__(self, n, param=None):
         self.n_input = n
         self.n_param = n + 1
-        self.param = np.zeros(self.n_param, np.double)
+        if param is None:
+            self.param = np.zeros(self.n_param, np.double)
+        else:
+            self.init_param(param)
     #
     def evaluate_one(self, Xk):
         return self.param[0] + (self.param[1:] @ Xk)
@@ -97,13 +106,9 @@ class SigmaNeuronModel(Model):
         X1 = np.empty((N, self.n_input+1), np.double)
         X1[:,0] = 1
         X1[:,1:] = X
-        
         S = X1 @ self.param
-
         D = self.outfunc.derivative(S)
-            
         G = X1 * D[:,None]
-        
         return G
     #
     def gradient_x(self, X):
@@ -153,36 +158,57 @@ class SimpleNN(Model):
     #
     def gradient(self, X):
         N = X.shape[0]
-        Grad = np.empty((N,self.n_param), np.double)
+        grad = np.empty((N,self.n_param), np.double)
+        U = np.empty((N, self.n_hidden), np.double)
 
-        for j in enumerate(self.n_hidden):
+        for j in range(self.n_hidden):
             mod = self.hidden[j]
             U[:,j] = mod.evaluate(X)
             
-        S = self.root.evaluate(U)
+        # S = self.root.evaluate(U)
 
-        Grad[:,:self.root.n_param] = self.root.gradient(U)
         m = self.root.n_param
-        GR = self.root.gradient_x(U) # (N, m+1)
+        grad[:,:m] = self.root.gradient(U)
+        GR = self.root.gradient_x(U) # (N, n_hidden)
         for i,mod in enumerate(self.hidden):
-            G = mod.gradient(X) # (N, n_param)
-            G[:,1:]
-            Grad[:,m:m+mod.n_param] = mod.gradient(X) * GR[i]
+            G = mod.gradient(X) # (N, mod.n_param)
+            grad[:,m:m+mod.n_param] = mod.gradient(X) * GR[:,i][:,None]
             m += mod.n_param
         return grad
 
-class MLPerceptron1(Model):
-    #
-    # X1 (N, n+1)
-    # W (m, n+1)
-    def evaluate(self, X):
-        func = self.func
-        
-        N = len(X)
-        X1 = np.empty((N, self.n_input+1), np.double)
-        X1[:,0] = 1
-        X1[:,1:] = X
+class LinearLayer:
 
-        U = X @ self.W.T
-        for j in range(N):
-            U[:] = func.evaluate(U[j])
+    def __init__(self, n_input, n_output):
+        self.n_input  = n_input
+        self.n_output = n_output
+        self.n_param  = n_output * (n_input+1)
+        self.param    = np.zeros(self.n_param, "d")
+        self.models   = []
+        
+        start = 0
+        n_param = n_input+1
+        for j in range(n_output):
+            mod = LinearModel(n_input, param=self.param[start:start+n_param])
+            self.models.append(mod)
+            start += n_param
+    #
+    def forward(self, X):
+        N = X.shape[0]
+        n_param = self.n_input + 1
+        Y = np.empty((N, self.n_output), "d")
+        
+        for j in range(self.n_output):
+            mod = self.models[j]
+            Y[:,j] = mod.evaluate(X)
+            
+        return Y
+    #
+    def backward(self, X):
+        N = X.shape[0]
+        G = np.empty((N, self.n_param), "d")
+        start = 0
+        for j in range(self.n_output):
+            mod = self.models[j]
+            G[:,start:start+mod.n_param] = mod.gradient(X)
+            start += mod.n_param
+        return G

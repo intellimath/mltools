@@ -42,14 +42,17 @@ np_putmask = np.putmask
     
 class Hinge(Func):
     #
+    def __init__(self, delta=1.0):
+        self.delta = delta
+    #
     def evaluate(self, X):
-        R = 1 - X
-        np_putmask(R, X>1, 0)
+        R = self.delta - X
+        np_putmask(R, X > self.delta, 0)
         return R
     #
     def derivative(self, X):
         R = -np_ones_like(X)
-        np_putmask(R, X>1, 0)
+        np_putmask(R, X > self.delta, 0)
         return R        
     #
 

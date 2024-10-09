@@ -45,6 +45,8 @@ class WRisk:
         if self.weights is None:
             N = X.shape[0]
             self.weights = np.full(N, 1.0/N, 'd')
+        else:
+            self.weights = np.asarray(weights, np.double)
         YY = self.model.evaluate(X)
         L = self.loss_func.evaluate(YY, Y)
         return np.average(L, weights=self.weights)
@@ -52,8 +54,9 @@ class WRisk:
     def gradient(self, X, Y):
         YY = self.model.evaluate(X)
         V = self.loss_func.derivative(YY, Y) * self.weights
-        gradient = self.model.gradient_one
-        return sum([vk * gradient(Xk) for vk, Xk in zip(V, X)])
+        G = self.model.gradient(X)
+        GV = G * V[:,None]
+        return GV.mean(axis=0)
 
 # class Risk2:
 #     #
