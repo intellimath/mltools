@@ -172,7 +172,7 @@ class SimpleNN(Model):
         GR = self.root.gradient_x(U) # (N, n_hidden)
         for i,mod in enumerate(self.hidden):
             G = mod.gradient(X) # (N, mod.n_param)
-            grad[:,m:m+mod.n_param] = mod.gradient(X) * GR[:,i][:,None]
+            grad[:,m:m+mod.n_param] = G * GR[:,i][:,None]
             m += mod.n_param
         return grad
 
