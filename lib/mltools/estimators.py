@@ -18,7 +18,7 @@ class LinearLS:
 
         if self.model is None:
             self.model = models.LinearModel(n)            
-        self.model.param[:] = W
+        self.model.init_param(W)
 
 class LinearWLS:
     #
@@ -44,7 +44,7 @@ class LinearWLS:
 
         if self.model is None:
             self.model = models.LinearModel(n)            
-        self.model.param[:] = W
+        self.model.init_param(W)
 
 class IRLS:
     #
