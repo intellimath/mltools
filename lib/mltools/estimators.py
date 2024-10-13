@@ -106,9 +106,11 @@ class MIRLS:
         tol = self.tol
 
         qvals = []
-        
+
+        mod = models.LinearModel(X.shape[1])
+        mod.param = np.random.random(mod.n_param)
         est = LinearWLS()
-        est.fit(X, Y)
+        est.model = mod
         
         err = est.model.evaluate(X) - Y
         err2 = err * err
