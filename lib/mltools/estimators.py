@@ -22,8 +22,10 @@ class LinearLS:
 
 class LinearWLS:
     #
-    def __init__(self):
+    def __init__(self, model=None):
         self.model = None
+        if model is not None:
+            self.model = model
     #
     def fit(self, X, Y, sample_weights=None):
         if sample_weights is not None and len(X) != len(sample_weights):
