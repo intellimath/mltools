@@ -63,9 +63,9 @@ class MMean(AggFunc):
             u_prev = u
             
             V = rho_func.derivative_div_x(X - u)
-            V /= V.sum()
+            # V /= V.sum()
             
-            u = (V @ X)
+            u = (V @ X) / V.sum()
             
             pval = rho_func.evaluate(X - u).mean()
             pvals.append(pval)

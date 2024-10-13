@@ -8,7 +8,7 @@ class Func:
         X: массив значений
         Возвращает: массив значений фунции
         """
-        pass
+        raise NotImplementedError()
     #
     def derivative(self, X):
         """
@@ -16,7 +16,7 @@ class Func:
         X: массив значений
         Возвращает: массив значений производной фунции
         """
-        pass
+        raise NotImplementedError()
     #
     def derivative2(self, X):
         """
@@ -24,7 +24,15 @@ class Func:
         X: массив значений
         Возвращает: массив значений 2-й производной фунции
         """
-        pass
+        raise NotImplementedError()
+    #
+    def derivative2_scaled(self, X):
+        """
+        Вычисляет значения 2-й производной функции f''(x) на массиве значений (нормированный).
+        X: массив значений
+        Возвращает: массив значений 2-й производной фунции
+        """
+        return self.derivative2(X)
     #
     def derivative_div_x(self, X):
         """
@@ -69,6 +77,7 @@ class Square(Func):
     #
     def derivative_div_x(self, X):
         return np.ones_like(X)
+    #
 
 np_abs = np.abs
 np_sign = np.sign
@@ -105,6 +114,10 @@ class SoftAbs(Func):
         v = self.eps2 + X*X
         return self.eps2 / (v * np.sqrt(v))
     #
+    def derivative2_scaled(self, X):
+        v = self.eps2 + X*X
+        return 1 / (v * np.sqrt(v))
+    #
     def derivative_div_x(self, X):
         return 1 / np_sqrt(self.eps2 + X*X)
 
@@ -128,6 +141,12 @@ class SoftQuantileFunc(Func):
     #
     def derivative2(self, X):
         Y = self.rho.derivative2(X)
+        Y[X > 0] *= self.alpha
+        Y[X < 0] *= (1.0 - self.alpha)
+        return Y
+    #
+    def derivative2_scaled(self, X):
+        Y = self.rho.derivative2_scaled(X)
         Y[X > 0] *= self.alpha
         Y[X < 0] *= (1.0 - self.alpha)
         return Y

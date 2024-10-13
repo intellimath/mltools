@@ -23,13 +23,13 @@ class Model:
             self.param[:] = param
     #
     def evaluate_one(self, Xk):
-        raise NotImplemented
+        raise NotImplementedError()
     #
     def gradient_one(self, Xk):
-        raise NotImplemented
+        raise NotImplementedError()
     #
     def gradient_x_one(self, Xk):
-        raise NotImplemented
+        raise NotImplementedError()
     #
     def ievaluate(self, X):
         evaluate_one = self.evaluate_one
