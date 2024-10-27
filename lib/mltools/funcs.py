@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.special import expit
 
 class Func:
     #
@@ -55,12 +56,12 @@ class Hinge(Func):
     #
     def evaluate(self, X):
         R = self.delta - X
-        np_putmask(R, X > self.delta, 0)
+        np.putmask(R, X > self.delta, 0)
         return R
     #
     def derivative(self, X):
-        R = -np_ones_like(X)
-        np_putmask(R, X > self.delta, 0)
+        R = -np.ones_like(X)
+        np.putmask(R, X > self.delta, 0)
         return R        
     #
 
@@ -173,41 +174,45 @@ class SoftHinge(Func):
         return -self.alpha * v / (1 + v)
     #
 
+class Logistic(Func):
+    #
+    def __init__(self, alpha=1.0):
+        self.alpha = alpha
+    #
+    def evaluate(self, X):
+        return expit(self.alpha * X)
+    #
+    def derivative(self, X):
+        V = expit(self.alpha * X)
+        return self.alpha * V *  (1 - V)
+    
 class Sigmoidal(Func):
     #
     def __init__(self, alpha=1.0):
         self.alpha = alpha
     #
     def evaluate(self, X):
-        return 1. / (1. + np.exp(-self.alpha * X))
+        return np.tanh(self.alpha * X)
     #
     def derivative(self, X):
-        V = 1. / (1. + np.exp(-self.alpha * X))
-        return self.alpha * V *  (1 - V)
-    
+        V = np.cosh(self.alpha * X)
+        return self.alpha / (V*V)
+
 class RELU(Func):
     def evaluate(self, X):
-        if X < 0:
-            return 0.
-        else:
-            return X
+        Y = X.copy()
+        Y[X<0] = 0
+        return Y
     #
     def derivative(self, X):
-        if X <= 0:
-            return 0.
-        else:
-            return 1.0
-    
-class HTg(Func):
-    #
-    def __init__(self, alpha=1.0):
-        self.alpha = alpha
+        Y = np.ones_like(X)
+        Y[X<=0] = 0
+        return Y
+
+class ID(Func):
     #
     def evaluate(self, X):
-        V = np.exp(-2*self.alpha * X)
-        return self.alpha * (1. - V) / (1. + V)
+        return X
     #
     def derivative(self, X):
-        V = np.exp(-2*self.alpha * X)
-        V1 = 1 + V
-        return 4 * self.alpha * V  /  (V1 * V1)
+        return np.ones_like(X)

@@ -1,5 +1,5 @@
 import numpy as np
-import sys
+# import sys
 
 class GradientDescent:
     #

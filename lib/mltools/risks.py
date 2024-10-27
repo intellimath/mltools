@@ -26,7 +26,7 @@ class Risk:
         YY = self.model.evaluate(X)
         V = self.loss_func.derivative(YY, Y)
         G = self.model.gradient(X)
-        GV = G * V[:,None]
+        GV = G * V[:, None]
         return GV.mean(axis=0)
 
 class WRisk:
