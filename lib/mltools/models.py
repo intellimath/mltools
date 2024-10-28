@@ -168,9 +168,14 @@ class SimpleNN(Model):
     #
     def evaluate(self, X):
         N = X.shape[0]
+        X1 = np.empty((N, self.n_input+1), np.double)
+        X1[:,0] = 1
+        X1[:,1:] = X
+        
         S = np.empty((N, self.n_hidden), np.double)
         for j, mod in enumerate(self.hidden):
-            S[:,j] = X @ mod.param[1:] + mod.param[0] # mod.evaluate(X)
+            S[:,j] = X1 @ mod.param # mod.evaluate(X)
+
         U = self.outfunc.evaluate(S)
         return self.root.evaluate(U)
     #
