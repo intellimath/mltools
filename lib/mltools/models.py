@@ -140,17 +140,16 @@ class SigmaNeuronModel(Model):
 
 class SimpleNN(Model):
     #
-    def __init__(self, outfunc, n_input, n_hidden=0, add_root=True):
+    def __init__(self, outfunc, n_input, n_hidden, add_root=True):
         self.n_input = n_input
         self.n_hidden = n_hidden
         self.outfunc = outfunc
         self.hidden = []
         self.n_hidden = 0
-        if n_hidden > 0:
-            for i in range(n_hidden):
-                self.add_hidden()
-            if add_root:
-                self.add_root()
+        for i in range(n_hidden):
+            self.add_hidden()
+        if add_root:
+            self.add_root()
     #
     def add_hidden(self):
         self.hidden.append(SigmaNeuronModel(self.outfunc, self.n_input))
@@ -161,13 +160,14 @@ class SimpleNN(Model):
         self.n_param = self.root.n_param + sum([mod.n_param for mod in self.hidden])
         self.param = np.empty(self.n_param, 'd')
         self.root.param = self.param[:self.root.n_param]
-        m = self.root.n_param
+        l = self.root.n_param
         for mod in self.hidden:
-            mod.param = self.param[m : m+mod.n_param]
-            m += mod.n_param
+            mod.param = self.param[l : l+mod.n_param]
+            l += mod.n_param
     #
     def evaluate(self, X):
         N = X.shape[0]
+
         X1 = np.empty((N, self.n_input+1), np.double)
         X1[:,0] = 1
         X1[:,1:] = X
@@ -199,11 +199,11 @@ class SimpleNN(Model):
         
         D = self.outfunc.derivative(S)
     
-        m = self.root.n_param
+        l = self.root.n_param
         for j, mod in enumerate(self.hidden):
             G = X1 * (D[:,j:j+1] * Gx[j]) #DG[:,j:j+1]
-            Grad[:,m:m+mod.n_param] = G
-            m += mod.n_param
+            Grad[:,l:l+mod.n_param] = G
+            l += mod.n_param
         return Grad
 
 class LinearLayer:

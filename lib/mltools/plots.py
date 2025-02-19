@@ -39,6 +39,7 @@ def plot_hist_and_rank_distribution(Y, bins=40):
     plt.plot(sorted(Y), marker='o', markersize=3)
     plt.ylabel(r"$y_k$")
     plt.xlabel(r"$k$ (rank)")
+    plt.minorticks_on()
     plt.tight_layout()
     plt.show()
 

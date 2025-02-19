@@ -56,12 +56,12 @@ class Hinge(Func):
     #
     def evaluate(self, X):
         R = self.delta - X
-        np.putmask(R, X > self.delta, 0)
+        R[X > self.delta] = 0
         return R
     #
     def derivative(self, X):
         R = -np.ones_like(X)
-        np.putmask(R, X > self.delta, 0)
+        R[X > self.delta] = 0
         return R        
     #
 
