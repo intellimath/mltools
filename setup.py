@@ -56,7 +56,7 @@ packages = ['mltools', ]
 
 setup(
     name = 'mltools',
-    version = '0.1',
+    version = '0.2',
     description = description,
     author = 'Zaur Shibzukhov',
     author_email = 'szport@gmail.com',
